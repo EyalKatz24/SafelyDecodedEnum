@@ -1,11 +1,38 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-
-/// A macro that produces both a value and a string containing the
-/// source code that generated the value. For example,
+/// An enum-only macro that adds an `unknown` enum `case`,
+/// adds a `Decodable` conformance if necessary,
+/// and adds `public init(from decoder: Decoder) throws` .
 ///
-///     #stringify(x + y)
+/// The `unknown` case is used as a "default" type on a decode failure (such as new case received in an API call that is not supported yet).
 ///
-/// produces a tuple `(x + y, "x + y")`.
-@freestanding(expression)
-public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "SafelyDecodedEnumMacros", type: "StringifyMacro")
+/// - NOTE:When you need another implementation of `init(from decoder: Decoder) throws`,
+///  do not use that macro.
+///
+/// Usage example:
+///```swift
+/// @SafelyDecodedEnum
+/// enum OperationType: String {
+///     case credit = "CREDIT"
+///     case debit = "DEBIT"
+/// }
+///```
+/// The macro `Localized` after macro expansion:
+///```swift
+/// enum OperationType: String {
+///     case credit = "CREDIT"
+///     case debit = "DEBIT"
+///
+///     case unknown = "UNKNOWN"
+///
+///     public init(from decoder: Decoder) throws {
+///         let container = try decoder.singleValueContainer()
+///         let rawValue = try container.decode(String.self)
+///         self = Self(rawValue: rawValue) ?? .unknown
+///     }
+/// }
+///
+/// public extension OperationType: Decodable {
+/// }
+///```
+@attached(member, names: arbitrary)
+@attached(extension, conformances: Decodable)
+public macro SafelyDecodedEnum() = #externalMacro(module: "SafelyDecodedEnumMacros", type: "SafelyDecodedEnumMacro")

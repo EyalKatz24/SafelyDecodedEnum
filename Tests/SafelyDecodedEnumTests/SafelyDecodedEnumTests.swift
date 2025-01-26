@@ -4,45 +4,222 @@ import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
 
-// Macro implementations build for the host, so the corresponding module is not available when cross-compiling. Cross-compiled tests may still make use of the macro itself in end-to-end tests.
 #if canImport(SafelyDecodedEnumMacros)
 import SafelyDecodedEnumMacros
 
 let testMacros: [String: Macro.Type] = [
-    "stringify": StringifyMacro.self,
+    "SafelyDecodedEnum": SafelyDecodedEnumMacro.self
 ]
 #endif
 
 final class SafelyDecodedEnumTests: XCTestCase {
-    func testMacro() throws {
+    
+    func testNotAnEnumDiagnostic() {
         #if canImport(SafelyDecodedEnumMacros)
         assertMacroExpansion(
             """
-            #stringify(a + b)
+            @SafelyDecodedEnum
+            struct NotAnEnum: String {
+            }
             """,
-            expandedSource: """
-            (a + b, "a + b")
+            expandedSource:
+            """
+            struct NotAnEnum: String {
+            }
+            
+            extension NotAnEnum: Decodable {
+            }
             """,
+            diagnostics: [
+                .init(message: "'SafelyDecodedEnum' macro can only be attached to enums", line: 1, column: 1)
+            ],
             macros: testMacros
         )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
-
-    func testMacroWithStringLiteral() throws {
+    
+    func testEmptyEnum() {
         #if canImport(SafelyDecodedEnumMacros)
         assertMacroExpansion(
-            #"""
-            #stringify("Hello, \(name)")
-            """#,
-            expandedSource: #"""
-            ("Hello, \(name)", #""Hello, \(name)""#)
-            """#,
+            """
+            @SafelyDecodedEnum
+            enum OperationType: String, Codable {
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: String, Codable {
+
+                case unknown = "UNKNOWN"
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .unknown
+                }
+            }
+            """,
             macros: testMacros
         )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
+    func testUnkownCase() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum
+            enum OperationType: String, Codable {
+                case credit = "CREDIT"
+                case debit = "DEBIT"
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: String, Codable {
+                case credit = "CREDIT"
+                case debit = "DEBIT"
+            
+                case unknown = "UNKNOWN"
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .unknown
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testDecodable() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum
+            public enum OperationType: String, Decodable {
+                case credit = "CREDIT"
+                case debit = "DEBIT"
+            }
+            """,
+            expandedSource:
+            """
+            public enum OperationType: String, Decodable {
+                case credit = "CREDIT"
+                case debit = "DEBIT"
+            
+                case unknown = "UNKNOWN"
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .unknown
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testNotDecodable() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum
+            enum OperationType: String {
+                case credit = "CREDIT"
+                case debit = "DEBIT"
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: String {
+                case credit = "CREDIT"
+                case debit = "DEBIT"
+            
+                case unknown = "UNKNOWN"
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .unknown
+                }
+            }
+            
+            extension OperationType: Decodable {
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testNoConformances() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum
+            enum OperationType {
+                case credit
+                case debit
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType {
+                case credit
+                case debit
+            
+                case unknown = "UNKNOWN"
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .unknown
+                }
+            }
+            """,
+            diagnostics: [
+                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1)
+            ],
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testNotStringConformance() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum
+            enum OperationType: Int {
+                case credit
+                case debit
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: Int {
+                case credit
+                case debit
+            
+                case unknown = "UNKNOWN"
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .unknown
+                }
+            }
+            """,
+            diagnostics: [
+                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1)
+            ],
+            macros: testMacros
+        )
         #endif
     }
 }
