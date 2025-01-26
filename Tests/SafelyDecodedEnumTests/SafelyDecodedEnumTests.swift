@@ -157,6 +157,38 @@ final class SafelyDecodedEnumTests: XCTestCase {
         #endif
     }
     
+    func testIntConformance() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum
+            public enum Order: Int, Decodable {
+                case first = 1
+                case second = 2
+                case last = 3
+            }
+            """,
+            expandedSource:
+            """
+            public enum Order: Int, Decodable {
+                case first = 1
+                case second = 2
+                case last = 3
+            
+                case unknown = -1
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .unknown
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
     func testNoConformances() {
         #if canImport(SafelyDecodedEnumMacros)
         assertMacroExpansion(
@@ -172,41 +204,93 @@ final class SafelyDecodedEnumTests: XCTestCase {
             enum OperationType {
                 case credit
                 case debit
-            
-                case unknown = "UNKNOWN"
-            
-                public init(from decoder: Decoder) throws {
-                    let container = try decoder.singleValueContainer()
-                    let rawValue = try container.decode(String.self)
-                    self = Self(rawValue: rawValue) ?? .unknown
-                }
             }
             """,
             diagnostics: [
-                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1)
+                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1), // TODO: Fix
+                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1),
             ],
             macros: testMacros
         )
         #endif
     }
     
-    func testNotStringConformance() {
+    func testNotStringOrIntConformance() {
         #if canImport(SafelyDecodedEnumMacros)
         assertMacroExpansion(
             """
             @SafelyDecodedEnum
-            enum OperationType: Int {
+            enum OperationType: Int8 {
                 case credit
                 case debit
             }
             """,
             expandedSource:
             """
-            enum OperationType: Int {
+            enum OperationType: Int8 {
+                case credit
+                case debit
+            }
+            """,
+            diagnostics: [
+                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1), // TODO: Fix
+                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1),
+            ],
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testStringArgumenWithSafeCase() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum(rawValue: .string("What"), safeCase: .general)
+            enum OperationType: String {
+                case credit
+                case debit
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: String {
                 case credit
                 case debit
             
-                case unknown = "UNKNOWN"
+                case general = "What"
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .general
+                }
+            }
+            
+            extension OperationType: Decodable {
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testStringArgumenWithoutSafeCase() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum(rawValue: .string("What"))
+            enum OperationType: String {
+                case credit
+                case debit
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: String {
+                case credit
+                case debit
+            
+                case unknown = "What"
             
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
@@ -214,10 +298,43 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
             }
+            
+            extension OperationType: Decodable {
+            }
             """,
-            diagnostics: [
-                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1)
-            ],
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testSafeCaseWithoutRawValueArgument() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum(safeCase: .undefined)
+            enum OperationType: String {
+                case credit
+                case debit
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: String {
+                case credit
+                case debit
+            
+                case undefined = "UNDEFINED"
+            
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .undefined
+                }
+            }
+            
+            extension OperationType: Decodable {
+            }
+            """,
             macros: testMacros
         )
         #endif

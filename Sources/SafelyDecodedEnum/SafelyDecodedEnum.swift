@@ -35,4 +35,16 @@
 ///```
 @attached(member, names: arbitrary)
 @attached(extension, conformances: Decodable)
-public macro SafelyDecodedEnum() = #externalMacro(module: "SafelyDecodedEnumMacros", type: "SafelyDecodedEnumMacro")
+public macro SafelyDecodedEnum(rawValue: RawValueType? = nil, safeCase: SafeCase = .unknown) = #externalMacro(module: "SafelyDecodedEnumMacros", type: "SafelyDecodedEnumMacro")
+
+public enum RawValueType {
+    case string(String)
+    case int(Int)
+}
+
+public enum SafeCase {
+    case unknown
+    case undefined
+    case none
+    case general
+}
