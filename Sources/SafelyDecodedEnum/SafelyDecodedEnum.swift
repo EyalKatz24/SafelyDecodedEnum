@@ -4,7 +4,7 @@
 ///
 /// The `unknown` case is used as a "default" type on a decode failure (such as new case received in an API call that is not supported yet).
 ///
-/// - NOTE:When you need another implementation of `init(from decoder: Decoder) throws`,
+/// - NOTE: When you need another implementation of `init(from decoder: Decoder) throws`,
 ///  do not use that macro.
 ///
 /// Usage example:
