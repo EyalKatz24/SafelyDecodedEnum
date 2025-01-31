@@ -14,8 +14,8 @@
  There use of enums is flexible, therefore this macro tries to support the most common ones.
  So far this macro supports the following `RawValue` types:
  
-    - **Int**
-    - **String**
+    - Int
+    - String
  
  The basic implementation, is where only `Decodable` conformance is required, 
  and the default safe case and value can be implicit. 
