@@ -15,7 +15,6 @@
  So far this macro supports the following `RawValue` types:
  
     - **Int**
-    
     - **String**
  
  The basic implementation, is where only `Decodable` conformance is required, 
