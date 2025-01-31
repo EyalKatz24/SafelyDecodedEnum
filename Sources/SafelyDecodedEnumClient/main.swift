@@ -5,6 +5,3 @@ enum OperationType: Int {
     case credit
     case debit
 }
-
-
-print(OperationType.credit)
