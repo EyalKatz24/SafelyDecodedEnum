@@ -31,7 +31,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
             }
             """,
             diagnostics: [
-                .init(message: "'SafelyDecodedEnum' macro can only be attached to enums", line: 1, column: 1)
+                .init(message: "`SafelyDecodedEnum` macro can only be attached to enums", line: 1, column: 1)
             ],
             macros: testMacros
         )
@@ -179,7 +179,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
             
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
-                    let rawValue = try container.decode(String.self)
+                    let rawValue = try container.decode(Int.self)
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
             }
@@ -207,8 +207,8 @@ final class SafelyDecodedEnumTests: XCTestCase {
             }
             """,
             diagnostics: [
-                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1), // TODO: Fix
-                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1),
+                .init(message: "`SafelyDecodedEnum` valid rawValues are `String` and `Int`", line: 1, column: 1),
+                .init(message: "`SafelyDecodedEnum` valid rawValues are `String` and `Int`", line: 1, column: 1),
             ],
             macros: testMacros
         )
@@ -233,8 +233,8 @@ final class SafelyDecodedEnumTests: XCTestCase {
             }
             """,
             diagnostics: [
-                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1), // TODO: Fix
-                .init(message: "'SafelyDecodedEnum' enum must have a `String` rawValue", line: 1, column: 1),
+                .init(message: "`SafelyDecodedEnum` valid rawValues are `String` and `Int`", line: 1, column: 1),
+                .init(message: "`SafelyDecodedEnum` valid rawValues are `String` and `Int`", line: 1, column: 1),
             ],
             macros: testMacros
         )
@@ -335,6 +335,31 @@ final class SafelyDecodedEnumTests: XCTestCase {
             extension OperationType: Decodable {
             }
             """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testRawValueTypeMismatch() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum(rawValue: .int(-10), safeCase: .undefined)
+            enum OperationType: String, Codable {
+                case credit
+                case debit
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: String, Codable {
+                case credit
+                case debit
+            }
+            """,
+            diagnostics: [
+                .init(message: "The `rawValue` argument doesn't match the enum `RawRepresentable` conformance type", line: 1, column: 1)
+            ],
             macros: testMacros
         )
         #endif

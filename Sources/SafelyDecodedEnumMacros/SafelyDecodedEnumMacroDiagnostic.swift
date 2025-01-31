@@ -11,8 +11,8 @@ import SwiftSyntaxMacros
 
 enum SafelyDecodedEnumMacroDiagnostic {
     case notAnEnum
-    case notStringRawValue
-    case rawValueMissmatch
+    case invalidRawValue
+    case rawValueMismatch
 }
 
 extension SafelyDecodedEnumMacroDiagnostic: DiagnosticMessage {
@@ -29,10 +29,10 @@ extension SafelyDecodedEnumMacroDiagnostic: DiagnosticMessage {
     var message: String {
         switch self {
         case .notAnEnum:
-            "'SafelyDecodedEnum' macro can only be attached to enums"
-        case .notStringRawValue:
-            "'SafelyDecodedEnum' enum must have a `String` rawValue"
-        case .rawValueMissmatch:
+            "`SafelyDecodedEnum` macro can only be attached to enums"
+        case .invalidRawValue:
+            "`SafelyDecodedEnum` valid rawValues are `String` and `Int`"
+        case .rawValueMismatch:
             "The `rawValue` argument doesn't match the enum `RawRepresentable` conformance type"
         }
     }
