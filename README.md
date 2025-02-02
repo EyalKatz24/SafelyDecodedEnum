@@ -1,4 +1,8 @@
 # SafelyDecodedEnum
+
+ [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+ [![SPM](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg)](https://swift.org/package-manager)
+ [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
  
  A macro for `Decodable` enums, where successful decoding is required. 
 
@@ -10,10 +14,6 @@
  >  When you need another implementation of `init(from decoder: Decoder) throws`, do not use that macro.
 
  ## Usage examples:
- 
- [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
- [![SPM](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg)](https://swift.org/package-manager)
- [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
  
  There use of enums is flexible, therefore this macro tries to support the most common ones.
  So far this macro supports the following `RawValue` types:
