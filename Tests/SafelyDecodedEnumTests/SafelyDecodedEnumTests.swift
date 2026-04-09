@@ -1,3 +1,10 @@
+//
+//  SafelyDecodedEnumTests.swift
+//  SafelyDecodedEnum
+//
+//  Created by Eyal Katz on 26/01/2025.
+//
+
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
@@ -5,7 +12,7 @@ import SwiftSyntaxMacrosTestSupport
 import XCTest
 
 #if canImport(SafelyDecodedEnumMacros)
-import SafelyDecodedEnumMacros
+@testable import SafelyDecodedEnumMacros
 
 let testMacros: [String: Macro.Type] = [
     "SafelyDecodedEnum": SafelyDecodedEnumMacro.self
