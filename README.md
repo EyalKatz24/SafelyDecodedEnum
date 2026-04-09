@@ -1,17 +1,42 @@
 # SafelyDecodedEnum
 
-[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![Swift](https://img.shields.io/badge/Swift-5.10+-orange.svg)](https://swift.org)
 [![SPM](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg)](https://swift.org/package-manager)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A macro for `String` and `Int` raw-value enums that need **safe decoding**: unknown raw values map to a dedicated fallback case instead of failing decode. It adds that **safe case**, a throwing `init(from:)`, `Decodable` if needed, and a static **`allDefinedCases`** property listing only the cases you wrote, not the safe fallback. By contrast, **`CaseIterable.allCases`** (if you conform) lists every case, including the synthesized safe case.
+✨ **SafelyDecodedEnum** helps with `String` and `Int` raw-value enums when the payload can include values you have not modeled yet, for example, new API cases. Instead of a failed decode, those values map to a **fallback case** you choose.
 
-> [!NOTE]
-> If you need a custom `init(from decoder: Decoder) throws`, do not use this macro.
+You also get **`allDefinedCases`**: only the cases you wrote, not that fallback. If you use `CaseIterable`, **`allCases`** includes the synthesized safe case; **`allDefinedCases`** does not.
 
-## Basic usage
+> **Note:** Need your own `init(from decoder: Decoder) throws`? This macro is not for that.
+
+## Requirements
+
+- **Swift 5.10+**, an Xcode that supports **Swift macros**, and macro support enabled for your target (defaults are fine on recent Xcode).
+- **Platforms:** iOS 13+, macOS 10.15+, tvOS 13+, watchOS 6+, Mac Catalyst 13+ (see `Package.swift` for the full list).
+
+## 📦 Add to your Xcode project
+
+1. **File -> Add Package Dependencies...**
+2. Paste:
+
+```
+https://github.com/EyalKatz24/SafelyDecodedEnum.git
+```
+
+3. Pick a [release](https://github.com/EyalKatz24/SafelyDecodedEnum/releases) or branch, then add **SafelyDecodedEnum** to your target.
+
+You link **SafelyDecodedEnum**; SwiftPM pulls in the macro plugin on its own.
+
+### Using with AI coding assistants
+
+If you use tools such as **Cursor**, **GitHub Copilot**, **Claude Code**, **ChatGPT** (custom instructions), **Kiro**, **Xcode** (e.g. Swift Assist), or similar in **your** app, the assistant only sees what you teach it. **Best practice:** copy the rules from [`AGENTS.md`](AGENTS.md) into your project’s agent or IDE rules, Copilot instructions, or app-level `AGENTS.md`. That keeps the model from misusing `allDefinedCases` or omitting the synthesized safe case in `switch` logic.
+
+## 💡 Basic usage
 
 ```swift
+import SafelyDecodedEnum
+
 @SafelyDecodedEnum
 enum OperationType: String {
     case credit = "CREDIT"
@@ -19,13 +44,14 @@ enum OperationType: String {
 }
 ```
 
-Roughly expands to:
+**Same enum with the macro expanded** (your cases plus what the macro generates):
 
 ```swift
 enum OperationType: String {
     case credit = "CREDIT"
     case debit = "DEBIT"
 
+    /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
     case unknown = "UNKNOWN"
 
     public init(from decoder: Decoder) throws {
@@ -34,6 +60,7 @@ enum OperationType: String {
         self = Self(rawValue: rawValue) ?? .unknown
     }
 
+    /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
     static var allDefinedCases: [Self] {
         [.credit, .debit]
     }
@@ -42,11 +69,11 @@ enum OperationType: String {
 extension OperationType: Decodable { }
 ```
 
-Add `Encodable` (or `Codable`) on the enum yourself if you need encoding. If the enum already declares `Decodable`, the macro does not emit a separate `extension ... : Decodable`.
+Want encoding too? Add **`Encodable`** or **`Codable`**. Already **`Decodable`**? The macro does not add another `extension` for `Decodable`.
 
-## Custom safe case and raw value
+## 🔧 Custom safe case and raw value
 
-When the default fallback name (`unknown`) or raw value is wrong for your API, pass `rawValue` and/or `safeCase`:
+Set the fallback's **name** with **`safeCase`** and its **raw value** with **`rawValue`**. The macro still adds **`init(from:)`** and **`allDefinedCases`** the same way as in Basic usage; **`Decodable`** is only added when the enum does not already declare it.
 
 ```swift
 @SafelyDecodedEnum(rawValue: .int(-999), safeCase: .general)
@@ -57,26 +84,34 @@ enum Order: Int, Decodable {
 }
 ```
 
-Expands to something like:
+**Macro adds:** the extra case is `case general = -999`. **`allDefinedCases`** is `[.first, .second, .last]`. No new `extension` for `Decodable` here because the enum already conforms.
+
+### More examples
+
+Custom string raw for the safe case; name stays the default **`unknown`**:
 
 ```swift
-enum Order: Int, Decodable {
-    case first = 1
-    case second = 2
-    case last = 3
-
-    case general = -999
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let rawValue = try container.decode(Int.self)
-        self = Self(rawValue: rawValue) ?? .general
-    }
-
-    static var allDefinedCases: [Self] {
-        [.first, .second, .last]
-    }
+@SafelyDecodedEnum(rawValue: .string("MY_DEFAULT"))
+enum Status: String {
+    case ok = "OK"
+    case fail = "FAIL"
 }
 ```
 
-`SafeCase` options are `.unknown`, `.undefined`, `.none`, and `.general`. For `String` enums, the safe case's raw value defaults to that name uppercased unless you pass `rawValue`.
+**Macro adds:** `case unknown = "MY_DEFAULT"`. Everything else follows Basic usage (`init(from:)`, **`allDefinedCases`**, `Decodable`).
+
+Custom safe case name only; on **`String`** enums the raw value is the **uppercase** spelling of that name unless you also pass **`rawValue`**:
+
+```swift
+@SafelyDecodedEnum(safeCase: .undefined)
+enum Role: String {
+    case user
+    case admin
+}
+```
+
+**Macro adds:** `case undefined = "UNDEFINED"`. Everything else follows Basic usage (`init(from:)`, **`allDefinedCases`**, `Decodable`).
+
+**`SafeCase`:** `.unknown`, `.undefined`, `.none`, `.general`.
+
+If you need behavior outside what the macro generates, write your own decoding and do not use this package for that enum.
