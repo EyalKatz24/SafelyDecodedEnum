@@ -1,22 +1,27 @@
-/// An enum-only macro that adds an `unknown` enum `case`,
-/// adds a `Decodable` conformance if necessary,
-/// and adds `public init(from decoder: Decoder) throws` .
+/// Attached macro for `String` and `Int` raw-value enums that need resilient decoding.
 ///
-/// The `unknown` case is used as a "default" type on a decode failure (such as new case received in an API call that is not supported yet).
+/// It synthesizes a **safe fallback** `case` (default name `unknown`; configurable via ``SafeCase``),
+/// a `public init(from decoder: Decoder) throws` that maps unknown raw values to that case,
+/// `Decodable` via an extension when the enum does not already declare it,
+/// and a static `allDefinedCases` array containing only the cases you wrote (the safe case is omitted).
 ///
-/// - NOTE: When you need another implementation of `init(from decoder: Decoder) throws`,
-///  do not use that macro.
+/// Use ``RawValueType`` and the macro arguments to override the safe case’s raw value when needed.
 ///
-/// Usage example:
-///```swift
+/// - Note: If you need a custom `init(from decoder: Decoder) throws`, do not use this macro.
+///
+/// ### Example
+///
+/// ```swift
 /// @SafelyDecodedEnum
 /// enum OperationType: String {
 ///     case credit = "CREDIT"
 ///     case debit = "DEBIT"
 /// }
-///```
-/// The macro `Localized` after macro expansion:
-///```swift
+/// ```
+///
+/// ### Expanded shape (illustrative)
+///
+/// ```swift
 /// enum OperationType: String {
 ///     case credit = "CREDIT"
 ///     case debit = "DEBIT"
@@ -29,14 +34,13 @@
 ///         self = Self(rawValue: rawValue) ?? .unknown
 ///     }
 ///
-///     public static var allDefinedCases: [Self] {
+///     static var allDefinedCases: [Self] {
 ///         [.credit, .debit]
 ///     }
 /// }
 ///
-/// public extension OperationType: Decodable {
-/// }
-///```
+/// extension OperationType: Decodable { }
+/// ```
 @attached(member, names: arbitrary)
 @attached(extension, conformances: Decodable)
 public macro SafelyDecodedEnum(rawValue: RawValueType? = nil, safeCase: SafeCase = .unknown) = #externalMacro(module: "SafelyDecodedEnumMacros", type: "SafelyDecodedEnumMacro")
