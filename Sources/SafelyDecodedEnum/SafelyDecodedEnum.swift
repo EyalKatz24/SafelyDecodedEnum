@@ -28,6 +28,10 @@
 ///         let rawValue = try container.decode(String.self)
 ///         self = Self(rawValue: rawValue) ?? .unknown
 ///     }
+///
+///     public static var allDefinedCases: [Self] {
+///         [.credit, .debit]
+///     }
 /// }
 ///
 /// public extension OperationType: Decodable {

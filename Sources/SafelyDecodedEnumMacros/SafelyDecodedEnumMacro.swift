@@ -20,6 +20,10 @@ public struct SafelyDecodedEnumMacro: MemberMacro {
             return []
         }
         
+        guard let enumDecl = declaration.as(EnumDeclSyntax.self) else {
+            return []
+        }
+        
         var declarations: [DeclSyntax] = []
         var safeCase = "unknown"
         var rawValue = rawValueType.defaultValue
@@ -53,8 +57,13 @@ public struct SafelyDecodedEnumMacro: MemberMacro {
             rawValueType: rawValueType
         )
         let initDecl = try initDecl(with: safeCase, rawValueType: rawValueType)
+        let allDefinedCasesDecl = try allDefinedCasesDecl(
+            enumDecl: enumDecl,
+            excludingSafeCase: safeCase
+        )
         declarations.append(DeclSyntax(safeEnumCaseDecl))
         declarations.append(DeclSyntax(initDecl))
+        declarations.append(DeclSyntax(allDefinedCasesDecl))
         return declarations
     }
     
@@ -68,6 +77,47 @@ public struct SafelyDecodedEnumMacro: MemberMacro {
             self = Self(rawValue: rawValue) ?? .\(raw: safeCase)
             """
         }
+    }
+    
+    private static func userDefinedCaseNames(excluding safeCase: String, from enumDecl: EnumDeclSyntax) -> [String] {
+        var names: [String] = []
+        for member in enumDecl.memberBlock.members {
+            guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
+            for element in caseDecl.elements {
+                guard element.parameterClause == nil else { continue }
+                let name = element.name.text
+                if name != safeCase {
+                    names.append(name)
+                }
+            }
+        }
+        return names
+    }
+    
+    /// Leading access keyword and space (e.g. `"public "`), or empty when the enum uses default `internal` access.
+    private static func accessLevelModifierPrefix(from enumDecl: EnumDeclSyntax) -> String {
+        let accessKeywords: Set<String> = ["public", "internal", "private", "fileprivate", "open", "package"]
+        guard let modifier = enumDecl.modifiers.first(where: { accessKeywords.contains($0.name.text) }) else {
+            return ""
+        }
+        return "\(modifier.name.text) "
+    }
+    
+    private static func allDefinedCasesDecl(enumDecl: EnumDeclSyntax, excludingSafeCase safeCase: String) throws -> VariableDeclSyntax {
+        let caseNames = userDefinedCaseNames(excluding: safeCase, from: enumDecl)
+        let arrayLiteral: String = if caseNames.isEmpty {
+            "[]"
+        } else {
+            "[" + caseNames.map { ".\($0)" }.joined(separator: ", ") + "]"
+        }
+        let modifierPrefix = accessLevelModifierPrefix(from: enumDecl)
+        return try VariableDeclSyntax(
+            """
+            \(raw: modifierPrefix)static var allDefinedCases: [Self] {
+                \(raw: arrayLiteral)
+            }
+            """
+        )
     }
     
     private static func safeEnumCaseDecl(_ safeCase: String, hasSafeCaseArgument: Bool, rawValue: String, hasRawValueArgument: Bool, rawValueType: SupportedRawValueType) throws -> EnumCaseDeclSyntax {

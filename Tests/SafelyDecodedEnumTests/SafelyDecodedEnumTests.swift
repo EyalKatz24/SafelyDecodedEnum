@@ -51,11 +51,15 @@ final class SafelyDecodedEnumTests: XCTestCase {
             enum OperationType: String, Codable {
 
                 case unknown = "UNKNOWN"
-            
+
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     let rawValue = try container.decode(String.self)
                     self = Self(rawValue: rawValue) ?? .unknown
+                }
+
+                static var allDefinedCases: [Self] {
+                    []
                 }
             }
             """,
@@ -79,13 +83,17 @@ final class SafelyDecodedEnumTests: XCTestCase {
             enum OperationType: String, Codable {
                 case credit = "CREDIT"
                 case debit = "DEBIT"
-            
+
                 case unknown = "UNKNOWN"
-            
+
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     let rawValue = try container.decode(String.self)
                     self = Self(rawValue: rawValue) ?? .unknown
+                }
+
+                static var allDefinedCases: [Self] {
+                    [.credit, .debit]
                 }
             }
             """,
@@ -109,13 +117,17 @@ final class SafelyDecodedEnumTests: XCTestCase {
             public enum OperationType: String, Decodable {
                 case credit = "CREDIT"
                 case debit = "DEBIT"
-            
+
                 case unknown = "UNKNOWN"
-            
+
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     let rawValue = try container.decode(String.self)
                     self = Self(rawValue: rawValue) ?? .unknown
+                }
+
+                public static var allDefinedCases: [Self] {
+                    [.credit, .debit]
                 }
             }
             """,
@@ -139,16 +151,20 @@ final class SafelyDecodedEnumTests: XCTestCase {
             enum OperationType: String {
                 case credit = "CREDIT"
                 case debit = "DEBIT"
-            
+
                 case unknown = "UNKNOWN"
-            
+
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     let rawValue = try container.decode(String.self)
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
+
+                static var allDefinedCases: [Self] {
+                    [.credit, .debit]
+                }
             }
-            
+
             extension OperationType: Decodable {
             }
             """,
@@ -174,13 +190,17 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case first = 1
                 case second = 2
                 case last = 3
-            
+
                 case unknown = -1
-            
+
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     let rawValue = try container.decode(Int.self)
                     self = Self(rawValue: rawValue) ?? .unknown
+                }
+
+                public static var allDefinedCases: [Self] {
+                    [.first, .second, .last]
                 }
             }
             """,
@@ -256,16 +276,20 @@ final class SafelyDecodedEnumTests: XCTestCase {
             enum OperationType: String {
                 case credit
                 case debit
-            
+
                 case general = "What"
-            
+
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     let rawValue = try container.decode(String.self)
                     self = Self(rawValue: rawValue) ?? .general
                 }
+
+                static var allDefinedCases: [Self] {
+                    [.credit, .debit]
+                }
             }
-            
+
             extension OperationType: Decodable {
             }
             """,
@@ -289,16 +313,20 @@ final class SafelyDecodedEnumTests: XCTestCase {
             enum OperationType: String {
                 case credit
                 case debit
-            
+
                 case unknown = "What"
-            
+
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     let rawValue = try container.decode(String.self)
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
+
+                static var allDefinedCases: [Self] {
+                    [.credit, .debit]
+                }
             }
-            
+
             extension OperationType: Decodable {
             }
             """,
@@ -322,16 +350,20 @@ final class SafelyDecodedEnumTests: XCTestCase {
             enum OperationType: String {
                 case credit
                 case debit
-            
+
                 case undefined = "UNDEFINED"
-            
+
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.singleValueContainer()
                     let rawValue = try container.decode(String.self)
                     self = Self(rawValue: rawValue) ?? .undefined
                 }
+
+                static var allDefinedCases: [Self] {
+                    [.credit, .debit]
+                }
             }
-            
+
             extension OperationType: Decodable {
             }
             """,
@@ -360,6 +392,75 @@ final class SafelyDecodedEnumTests: XCTestCase {
             diagnostics: [
                 .init(message: "The `rawValue` argument doesn't match the enum `RawRepresentable` conformance type", line: 1, column: 1)
             ],
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testAllDefinedCasesMultipleElementsOnOneLine() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum
+            enum Furniture: String, Codable {
+                case chair, table, barTable = "BAR_TABLE"
+            }
+            """,
+            expandedSource:
+            """
+            enum Furniture: String, Codable {
+                case chair, table, barTable = "BAR_TABLE"
+
+                case unknown = "UNKNOWN"
+
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .unknown
+                }
+
+                static var allDefinedCases: [Self] {
+                    [.chair, .table, .barTable]
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testSafeCaseNone() {
+        #if canImport(SafelyDecodedEnumMacros)
+        assertMacroExpansion(
+            """
+            @SafelyDecodedEnum(safeCase: .none)
+            enum OperationType: String {
+                case credit
+                case debit
+            }
+            """,
+            expandedSource:
+            """
+            enum OperationType: String {
+                case credit
+                case debit
+
+                case none = "NONE"
+
+                public init(from decoder: Decoder) throws {
+                    let container = try decoder.singleValueContainer()
+                    let rawValue = try container.decode(String.self)
+                    self = Self(rawValue: rawValue) ?? .none
+                }
+
+                static var allDefinedCases: [Self] {
+                    [.credit, .debit]
+                }
+            }
+
+            extension OperationType: Decodable {
+            }
+            """,
             macros: testMacros
         )
         #endif
