@@ -1,30 +1,16 @@
 # SafelyDecodedEnum
 
- [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
- [![SPM](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg)](https://swift.org/package-manager)
- [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
- 
- A macro for `Decodable` enums, where successful decoding is required. 
+[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![SPM](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg)](https://swift.org/package-manager)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
- This macro makes sure your enum has `Decodable` conformance,
- and automatically adds a default 'safeCase' with a default `rawValue`,
- unless declared with explicit type and/or value arguments.
+A macro for `String` and `Int` raw-value enums that need **safe decoding**: unknown raw values map to a dedicated fallback case instead of failing decode. It adds that **safe case**, a throwing `init(from:)`, `Decodable` if needed, and a static **`allDefinedCases`** property listing only the cases you wrote, not the safe fallback. By contrast, **`CaseIterable.allCases`** (if you conform) lists every case, including the synthesized safe case.
 
- > [!Note] 
- >  When you need another implementation of `init(from decoder: Decoder) throws`, do not use that macro.
+> [!NOTE]
+> If you need a custom `init(from decoder: Decoder) throws`, do not use this macro.
 
- ## Usage examples:
- 
- There use of enums is flexible, therefore this macro tries to support the most common ones.
- So far this macro supports the following `RawValue` types:
- 
-    - Int
-    - String
- 
- The basic implementation, is where only `Decodable` conformance is required, 
- and the default safe case and value can be implicit. 
- On that scenario, the macro can be attached to a simple enum (with supported raw value): 
- 
+## Basic usage
+
 ```swift
 @SafelyDecodedEnum
 enum OperationType: String {
@@ -33,11 +19,13 @@ enum OperationType: String {
 }
 ```
 
- The macro `SafelyDecodedEnum` after macro expansion:
+Roughly expands to:
+
 ```swift
- enum OperationType: String {
+enum OperationType: String {
     case credit = "CREDIT"
     case debit = "DEBIT"
+
     case unknown = "UNKNOWN"
 
     public init(from decoder: Decoder) throws {
@@ -45,20 +33,20 @@ enum OperationType: String {
         let rawValue = try container.decode(String.self)
         self = Self(rawValue: rawValue) ?? .unknown
     }
+
+    static var allDefinedCases: [Self] {
+        [.credit, .debit]
+    }
 }
 
-extension OperationType: Decodable {
-}
+extension OperationType: Decodable { }
 ```
 
- > [!Note] 
- >  When you need also `Encodalbe` conformance, simply add this conformance by yourself.
- >  Explicit `Decodable` declaration would not add an extesion with the conformance.
- 
- 
- In some cases the default "safe case" cannot be `unknown`,
- or the default "safe raw value" cannot be the implicit one.
- For those you can declare explicitly the safe `rawValue` and/or the `safeCase`:
+Add `Encodable` (or `Codable`) on the enum yourself if you need encoding. If the enum already declares `Decodable`, the macro does not emit a separate `extension ... : Decodable`.
+
+## Custom safe case and raw value
+
+When the default fallback name (`unknown`) or raw value is wrong for your API, pass `rawValue` and/or `safeCase`:
 
 ```swift
 @SafelyDecodedEnum(rawValue: .int(-999), safeCase: .general)
@@ -69,20 +57,26 @@ enum Order: Int, Decodable {
 }
 ```
 
-And after expansion:
+Expands to something like:
 
 ```swift
-@SafelyDecodedEnum(rawValue: .int(-999), safeCase: .general)
 enum Order: Int, Decodable {
     case first = 1
     case second = 2
     case last = 3
+
     case general = -999
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let rawValue = try container.decode(Int.self)
         self = Self(rawValue: rawValue) ?? .general
     }
+
+    static var allDefinedCases: [Self] {
+        [.first, .second, .last]
+    }
 }
 ```
+
+`SafeCase` options are `.unknown`, `.undefined`, `.none`, and `.general`. For `String` enums, the safe case's raw value defaults to that name uppercased unless you pass `rawValue`.

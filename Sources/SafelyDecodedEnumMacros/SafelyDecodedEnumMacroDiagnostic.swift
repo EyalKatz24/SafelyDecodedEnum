@@ -19,7 +19,7 @@ extension SafelyDecodedEnumMacroDiagnostic: DiagnosticMessage {
     var severity: DiagnosticSeverity { .error }
 
     var diagnosticID: MessageID {
-        MessageID(domain: "Swift", id: "SafelyDecodedEnum.\(self)")
+        MessageID(domain: "SafelyDecodedEnumMacros", id: "SafelyDecodedEnum.\(self)")
     }
 
     func diagnose(at node: some SyntaxProtocol) -> Diagnostic {
