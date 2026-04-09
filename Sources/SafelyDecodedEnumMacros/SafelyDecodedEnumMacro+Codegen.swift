@@ -76,6 +76,7 @@ extension SafelyDecodedEnumMacro {
         let modifierPrefix = accessLevelModifierPrefix(from: enumDecl)
         return try VariableDeclSyntax(
             """
+            /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
             \(raw: modifierPrefix)static var allDefinedCases: [Self] {
                 \(raw: arrayLiteral)
             }
@@ -97,6 +98,7 @@ extension SafelyDecodedEnumMacro {
 
         return try EnumCaseDeclSyntax(
             """
+            /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
             case \(raw: safeCase) = \(raw: calculatedRawValue)
             """
         )

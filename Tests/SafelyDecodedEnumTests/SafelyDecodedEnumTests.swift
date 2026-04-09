@@ -57,6 +57,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
             """
             enum OperationType: String, Codable {
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case unknown = "UNKNOWN"
 
                 public init(from decoder: Decoder) throws {
@@ -65,6 +66,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 static var allDefinedCases: [Self] {
                     []
                 }
@@ -91,6 +93,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case credit = "CREDIT"
                 case debit = "DEBIT"
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case unknown = "UNKNOWN"
 
                 public init(from decoder: Decoder) throws {
@@ -99,6 +102,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 static var allDefinedCases: [Self] {
                     [.credit, .debit]
                 }
@@ -125,6 +129,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case credit = "CREDIT"
                 case debit = "DEBIT"
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case unknown = "UNKNOWN"
 
                 public init(from decoder: Decoder) throws {
@@ -133,6 +138,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 public static var allDefinedCases: [Self] {
                     [.credit, .debit]
                 }
@@ -159,6 +165,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case credit = "CREDIT"
                 case debit = "DEBIT"
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case unknown = "UNKNOWN"
 
                 public init(from decoder: Decoder) throws {
@@ -167,6 +174,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 static var allDefinedCases: [Self] {
                     [.credit, .debit]
                 }
@@ -198,6 +206,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case second = 2
                 case last = 3
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case unknown = -1
 
                 public init(from decoder: Decoder) throws {
@@ -206,6 +215,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 public static var allDefinedCases: [Self] {
                     [.first, .second, .last]
                 }
@@ -284,6 +294,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case credit
                 case debit
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case general = "What"
 
                 public init(from decoder: Decoder) throws {
@@ -292,6 +303,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .general
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 static var allDefinedCases: [Self] {
                     [.credit, .debit]
                 }
@@ -321,6 +333,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case credit
                 case debit
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case unknown = "What"
 
                 public init(from decoder: Decoder) throws {
@@ -329,6 +342,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 static var allDefinedCases: [Self] {
                     [.credit, .debit]
                 }
@@ -358,6 +372,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case credit
                 case debit
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case undefined = "UNDEFINED"
 
                 public init(from decoder: Decoder) throws {
@@ -366,6 +381,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .undefined
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 static var allDefinedCases: [Self] {
                     [.credit, .debit]
                 }
@@ -418,6 +434,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
             enum Furniture: String, Codable {
                 case chair, table, barTable = "BAR_TABLE"
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case unknown = "UNKNOWN"
 
                 public init(from decoder: Decoder) throws {
@@ -426,6 +443,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .unknown
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 static var allDefinedCases: [Self] {
                     [.chair, .table, .barTable]
                 }
@@ -452,6 +470,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                 case credit
                 case debit
 
+                /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
                 case none = "NONE"
 
                 public init(from decoder: Decoder) throws {
@@ -460,6 +479,7 @@ final class SafelyDecodedEnumTests: XCTestCase {
                     self = Self(rawValue: rawValue) ?? .none
                 }
 
+                /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
                 static var allDefinedCases: [Self] {
                     [.credit, .debit]
                 }

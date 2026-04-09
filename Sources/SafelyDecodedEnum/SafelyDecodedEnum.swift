@@ -26,6 +26,7 @@
 ///     case credit = "CREDIT"
 ///     case debit = "DEBIT"
 ///
+///     /// Used when decoding does not match any user-defined case. Expanded from `@SafelyDecodedEnum`.
 ///     case unknown = "UNKNOWN"
 ///
 ///     public init(from decoder: Decoder) throws {
@@ -34,6 +35,7 @@
 ///         self = Self(rawValue: rawValue) ?? .unknown
 ///     }
 ///
+///     /// All cases you declared in source, excluding the synthesized safe fallback. Expanded from `@SafelyDecodedEnum`.
 ///     static var allDefinedCases: [Self] {
 ///         [.credit, .debit]
 ///     }
